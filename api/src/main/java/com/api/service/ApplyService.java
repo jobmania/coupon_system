@@ -1,6 +1,7 @@
 package com.api.service;
 
 import com.api.domain.Coupon;
+import com.api.producer.CouponCreateProducer;
 import com.api.repository.CouponCountRepository;
 import com.api.repository.CouponRepository;
 import org.springframework.stereotype.Service;
@@ -9,15 +10,21 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ApplyService {
     private final CouponRepository couponRepository;
-    private final CouponCountRepository cuponCountRepository;
+    private final CouponCountRepository couponCountRepository;
+    private final CouponCreateProducer couponCreateProducer;
 
-    public ApplyService(CouponRepository couponRepository, CouponCountRepository couponCountRepository) {
+
+    public ApplyService(CouponRepository couponRepository
+            , CouponCountRepository couponCountRepository
+            , CouponCreateProducer couponCreateProducer
+    ) {
         this.couponRepository = couponRepository;
-        this.cuponCountRepository = couponCountRepository;
+        this.couponCountRepository = couponCountRepository;
+        this.couponCreateProducer = couponCreateProducer;
     }
 
     @Transactional
-    public void apply(Long userId){
+    public void apply(Long userId) {
         // 데이터베이스 락을 활용한다면
         // 저장시 2초라면 요청이 2초까지 걸림
 
@@ -27,16 +34,19 @@ public class ApplyService {
          *
          * */
 
-        // 데이터베이스
+        // before : 데이터베이스 조회
 //        long count = couponRepository.count();
 
-        // 레디스
-        Long count = cuponCountRepository.increment();
+        // after ; 레디스에서 조회
+        Long count = couponCountRepository.increment();
 
-        if(count > 100) {
+        if (count > 100) {
             return;
         }
+        // before : 데이터 베이스에서 직접 생성
+//        couponRepository.save(new Coupon(userId));
 
-        couponRepository.save(new Coupon(userId));
+        // after :
+        couponCreateProducer.create(userId);
     }
 }
