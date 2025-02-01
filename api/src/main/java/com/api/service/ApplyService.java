@@ -2,6 +2,7 @@ package com.api.service;
 
 import com.api.domain.Coupon;
 import com.api.producer.CouponCreateProducer;
+import com.api.repository.AppliedUserRepository;
 import com.api.repository.CouponCountRepository;
 import com.api.repository.CouponRepository;
 import org.springframework.stereotype.Service;
@@ -12,15 +13,18 @@ public class ApplyService {
     private final CouponRepository couponRepository;
     private final CouponCountRepository couponCountRepository;
     private final CouponCreateProducer couponCreateProducer;
+    private final AppliedUserRepository appliedUserRepository;
 
 
     public ApplyService(CouponRepository couponRepository
             , CouponCountRepository couponCountRepository
             , CouponCreateProducer couponCreateProducer
+            , AppliedUserRepository appliedUserRepository
     ) {
         this.couponRepository = couponRepository;
         this.couponCountRepository = couponCountRepository;
         this.couponCreateProducer = couponCreateProducer;
+        this.appliedUserRepository = appliedUserRepository;
     }
 
     @Transactional
@@ -37,8 +41,17 @@ public class ApplyService {
         // before : 데이터베이스 조회
 //        long count = couponRepository.count();
 
+        // after  2 : 레디스 <set> 구조를 사용하여 중복방지
+        Long apply = appliedUserRepository.add(userId);
+
+        if( apply != 1){
+            return;
+        }
+
         // after ; 레디스에서 조회
         Long count = couponCountRepository.increment();
+
+
 
         if (count > 100) {
             return;

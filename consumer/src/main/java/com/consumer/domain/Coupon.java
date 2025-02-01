@@ -13,6 +13,7 @@ public class Coupon {
 
     private Long userId;
 
+
     public Coupon() {
     }
 
