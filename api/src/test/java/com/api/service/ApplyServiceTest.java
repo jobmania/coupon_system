@@ -54,6 +54,8 @@ class ApplyServiceTest {
         }
         latch.await();
 
+        Thread.sleep(10000);
+
         long count = couponRepository.count();
 
         // 더 많은 쿠폰이 발급
